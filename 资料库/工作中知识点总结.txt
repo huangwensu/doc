@@ -1,0 +1,64 @@
+1.object.assign
+    (1)Object.assign是ES6新添加的接口，主要的用途是用来合并多个JavaScript的对象。
+    (2)assign的设计目的是用于合并接口的，所以它接收的第一个参数（目标）应该是对象，如果不是对象的话，它会在内部转换
+       成对象，所以如果碰到了null或者undefined这种不能转换成对象的值的话，assign就会报错。但是如果源对象的参数位置，
+       接收到了无法转换为对象的参数的话，会忽略这个源对象参数。
+
+2.css3中的display：-webkit-box的用法
+   flex-direction:row-reverse
+
+3.如何将值类型变成引用类型
+  var str = "abcd";        //基本类型
+  var obj = {"str":str};   //引用类型
+  var boj2 = obj;          //复制引用地址
+  obj.str = "bcd";
+  console.log(boj2.str); 
+
+4.promise
+  （1）Promise 构造函数是同步执行的，promise.then 中的函数是异步执行的
+  （2）promise 有 3 种状态：pending、fulfilled 或 rejected。状态改变只能是 pending->fulfilled 或者 pending->rejected，状态一旦改变则不能再变。
+  （3）构造函数中的 resolve 或 reject 只有第一次执行有效，多次调用没有任何作用，呼应代码二结论：promise 状态一旦改变则不能再变。
+  （4）promise 可以链式调用。提起链式调用我们通常会想到通过 return this 实现，不过 Promise 并不是这样实现的（return 语句不执行）。promise 每次调用 .then 或者 .catch 
+          都会返回一个新的 promise，从而实现了链式调用。
+  （5）.then 或者 .catch 的参数期望是函数，传入非函数则会发生值穿透。
+  （6）.then 或者 .catch 中 return 一个 error 对象并不会抛出错误，所以不会被后续的 .catch 捕获
+           Promise.resolve()
+ 	 .then(() => {
+   		 return new Error('error!!!')   // 返回任意一个非 promise 的值都会被包裹成 promise 对象，等价于 return Promise.resolve(new Error('error!!!'))。
+  	})
+  	.then((res) => {
+   		 console.log('then: ', res)  // 这个值被打印
+  	})
+  	.catch((err) => {
+    		console.log('catch: ', err)
+           })
+  （7）.then 或 .catch 返回的值不能是 promise 本身，否则会造成死循环
+          const promise = Promise.resolve()
+  	.then(() => {
+    		return promise  // 死循环
+  	})
+          promise.catch(console.error) 
+
+5.async-await
+  （1）async用来表示函数是异步的，定义的函数会返回一个promise对象，可以使用then方法添加回调函数
+  （2）await可以理解是async await的简写，await必须出现在async函数内部，不能单独使用。主要意图是用来等待promise对象的状态被resolved
+  （3）对于reject的情况，应该将代码块(含有await)用 try catch包裹一下
+
+6.Object.defineProperty
+  (1)对象里目前存在的属性描述符有两种主要形式：数据描述符和存取描述符
+  (2)描述符可同时具有的键值
+       	        configurable enumerable	value    writable	get	set
+      数据描述符	Yes	Yes	Yes	Yes	No	No
+      存取描述符	Yes	Yes	No	No	Yes	Yes
+ (3)如果一个描述符不具有value,writable,get 和 set 任意一个关键字，那么它将被认为是一个数据描述符。
+     如果一个描述符同时有(value或writable)和(get或set)关键字，将会产生一个异常
+
+
+
+
+
+
+
+
+
+

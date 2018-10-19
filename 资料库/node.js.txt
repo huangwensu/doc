@@ -1,0 +1,77 @@
+1.node.js
+    不支持进程和线程操作,采用的是单线程的处理机制(所有的I/O请求都采用非阻塞的工作方式)
+    异步是通过一次次的循环事件队列来实现的．同步则是说阻塞式的IO
+
+2.避免回调地狱
+  (1)使用promise
+  (2)使用aync/await
+
+3.如何保证你的HTTP cookies安全不受XSS攻击
+  在set-cookieHTTP头部加上这几个信息：
+        HttpOnly-这个属性用来防止跨站脚本攻击，它不允许cookie被JavaScript代码获取。
+        secure-这个属性告诉浏览器只有在HTTPS连接时才发送cookie
+
+4.require()方法的使用
+  (1)nodejs使用的是common.js的规范，require的过程是同步的，require过的文件会加载到缓存，所以多次require
+      同一个文件（模块）不会重复加载
+  (2)循环引用并不会报错，导致的结果是require的结果是空对象{}，解决方法：通过分离共用的代码到另一个文件解决，
+      或者不在最外层 require，在用到的地方 require，通常在函数的内部
+
+5.exports和module.exports的区别
+  （1）module.exports初始值为一个空对象{ }
+  （2）exports是指向的module.exports的引用
+  （3）require()返回的是module.exports，而不是exports
+  （4）module.exports 指向新的对象时，exports 断开了与 module.exports 的引用，那么通过 exports = module.exports
+          让 exports 重新指向 module.exports
+
+6.环境变量process.env
+   通过set NODE_ENV=xx来设置环境变量
+
+7.npm
+   npn install express --save --save-exact  固定版本号
+   npm shrinkwrap   生成npm-shrinkwrap.json文件，彻底锁定依赖的版本，在npm install时候优先使用这个json文件进行安装，没有才考虑
+                               package.json进行安装，npm shrinkwrap 只会生成 dependencies 的依赖，不会生成 devDependencies 的。
+
+8.express路由中的req
+  （1）req.query
+  （2）req.params
+  （3）req.body
+
+9.express中的路由
+
+10.中间件与next
+     （1）express中的中间件就是用来处理请求的，当一个中间件处理完，可以通过next()传递给下一个中间件，如果没有调用next()，则请求不会往下传递
+     （2）通过 app.use 加载中间件，在中间件中通过 next 将请求传递到下一个中间件，next 可接受一个参数接收错误信息，如果使用了 next(error)，则会返回错误而不会传递到下一个中间件
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

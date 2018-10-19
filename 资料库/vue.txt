@@ -1,0 +1,228 @@
+1.点击 <router-link> 时，这个方法会在内部调用，所以说，点击 <router-link :to="..."> 等同于调用 router.push(...)。
+	声明式：<router-link :to="...">
+	编程式：router.push(...)
+
+2.当我们在使用v-for进行渲染时，尽可能使用渲染元素自身属性的id给渲染的元素绑定一个key值，这样在当前渲染元
+  素的DOM结构发生变化时，能够单独响应该元素而不触发所有元素的渲染（防止页面进行virtual DOM的diff算法时的渲染复用）。
+
+3.所有的 Vue 组件都是 Vue 实例，并且接受相同的选项对象 (一些根实例特有的选项除外)，$xx表示vue实例中的属性或方法。
+
+4.只有当实例被创建时 data 中存在的属性才是响应式的，即将data中的属性转换为getter和setter,子组件中没有data对象只有data函数，
+  为了避免多个子组件数据相互影响。vue实例中data的返回return后面添加一个对象括号{}，是为了让组件复用时候数据互不影响。
+
+5.生命周期钩子的函数，这给了用户在不同阶段添加自己的代码的机会
+   beforeCreate : 实例初始化之后，this指向创建的实例，不能访问到data、computed、watch、methods上的方法和数据
+   created          : 实例创建完成，可访问data、computed、watch、methods上的数据和方法，未挂载到DOM，不能访问到$el
+                          属性，$ref属性内容为空数组
+   beforeMount : 在挂载开始之前被调用，beforeMount之前，会找到对应的template，并编译成render函数
+   mounted       :  实例挂载到DOM上，此时可以通过DOM API获取到DOM节点，$ref属性可以访问
+   beforeUpdate:  响应式数据更新时调用，发生在虚拟DOM打补丁之前（适合在更新之前访问现有的DOM，比如手动移除
+                           已添加的事件监听器） 
+   updated        ：组件DOM已经更新，可执行依赖于DOM的操作（避免在这个钩子函数中操作数据，可能陷入死循环）
+  （1）单组件的生命周期
+          初始化组件时，仅执行了beforeCreate/Created/beforeMount/mounted四个钩子函数
+          当改变data中定义的变量（响应式变量）时，会执行beforeUpdate/updated钩子函数
+          当切换组件（当前组件未缓存）时，会执行beforeDestory/destroyed钩子函数
+          初始化和销毁时的生命钩子函数均只会执行一次，beforeUpdate/updated可多次执行
+  （2）父子组件的生命周期
+          仅当子组件完成挂载后，父组件才会挂载
+          当子组件完成挂载后，父组件会主动执行一次beforeUpdate/updated钩子函数（仅首次）
+          父子组件在data变化中是分别监控的，但是在更新props中的数据是关联的（可实践）
+          销毁父组件时，先将子组件销毁后才会销毁父组件
+  （3）兄弟组件的生命周期
+          组件的初始化（mounted之前）分开进行，挂载是从上到下依次进行
+          当没有数据关联时，兄弟组件之间的更新和销毁是互不关联的
+  （4）宏mixin的生命周期
+          mixin中的生命周期与引入该组件的生命周期是仅仅关联的，且mixin的生命周期优先执行
+
+6.生命周期钩子的 this 上下文指向调用它的 Vue 实例，不要在选项属性或回调上使用箭头函数（method中的方法、生命周期函数、
+  computed计算函数和watch函数都不可以使用箭头函数，因为箭头函数中的this是父级上下文）：
+  比如 created: () => console.log(this.a) 
+    或 vm.$watch('a', newValue => this.myMethod())
+
+7.在底层的实现上，Vue 将模板编译成virtual DOM 渲染函数。结合响应系统，Vue 能够智能地计算出最少需要重新渲染多少组件，
+  并把 DOM 操作次数减到最少。
+
+8.v-bind 工作起来略有不同，在这个例子中：
+  <button v-bind:disabled="isButtonDisabled">Button</button>
+  如果 isButtonDisabled 的值是 null、undefined 或 false，则 disabled 特性甚至不会被包含在渲染出来
+  的 <button> 元素中
+
+9.计算属性缓存 vs 方法（computed , watch 和 methods 的区别）
+    （1）methods是用来定义函数的，它需要手动调用才能执行，而computed和watch是自动执行预先定义的函数
+    （2）computed是计算属性，事实上和data对象里的数据属于同一类，所以取用的时候就像取data中的数据一样
+              computed:{
+  		fullName: function () { return this.firstName + lastName }   //用this.fullName去取用
+	}
+            只有存在依赖型数据且依赖型数据发生改变这两个条件,computed才会重新计算
+    （3）watch擅长处理的场景是一个数据影响多个数据，computed擅长处理的场景是一个数据被多个数据影响，且
+            computed的性能更好代码简洁
+    （4）计算属性（computed和watch）基于它们的依赖进行缓存的。计算属性只有在它的相关依赖发生改变时才会重新求值，即存在缓存；
+            相比之下，每当触发重新渲染时，调用方法将总会再次执行函数。
+
+10.响应式原理（vue实例中的data的作用）
+  （1）Vue遍历data中所有的属性，并使用Object.defineProperty把这些属性全部转为getter/setter，这些 getter/setter 对用
+          户来说是不可见的，但是在内部它们让 Vue 追踪依赖，在属性被访问和修改时通知变化。
+  （2）每个组件实例都有相应的 watcher 实例对象，它会在组件渲染的过程中把属性记录为依赖，之后当依赖项的 setter 被调用时，
+          会通知 watcher 重新计算，从而致使它关联的组件得以更新。
+  （3）由于 Vue 会在初始化实例时对属性执行 getter/setter 转化过程，所以属性必须在 data 对象上存在才能让 Vue 转换它，
+          这样才能让它是响应的。
+          var vm = new Vue({
+   		data:{
+  			a:1
+  		}
+	})
+
+	// `vm.a` 是响应的
+
+	vm.b = 2
+	// `vm.b` 是非响应的
+
+  （4）添加响应属性
+          添加到对象上的新属性不会触发更新。在这种情况下可以创建一个新的对象，让它包含原对象的属性和新的属性：
+          this.someObject = Object.assign({}, this.someObject, { a: 1, b: 2 })
+
+11.axios
+   (1) axios本质上也是对原生XHR的封装，只不过它是Promise的实现版本，符合最新的ES规范。
+   (2) axios.all执行多个并发请求
+   (3) 发送请求的config配置，只有url是必须的，其中的data只适用于PUT，POST, PATCH请求
+   (4) 请求拦截器axios.interceptors.request.use((config)=>{});
+        响应拦截器axios.interceptors.response.use(()=>{});
+   (5)取消请求：使用cancelTocken
+	
+12.父组件通过prop传递过来的数据，子组件不能任意修改，如果要修改子组件应该先在data内声明一个变量用来保存传过来的参数
+
+13.组件通信
+  （1）父子组件：props $emit()  $on /  父链和子组件索引
+  （2）兄弟组件: bus /  父链和子组件索引
+  （3）跨级组件: bus /  父链和子组件索引
+
+14.mixins
+    mixins: 父组件 + 子组件 = 新的组件（合并）
+    普通引入组件 ： 父组件 + 子组件 = 父组件 + 子组件
+  （1）混入的先执行，然后构造器的再执行
+  （2）当混入方法和构造器方法重名时，混入的方法不起作用
+
+15.slot
+  （1）单个插槽
+       slot分发的内容，作用域在父组件上
+       子组件<slot>内的备用内容，它的作用域是子组件本身
+  （2）具名插槽
+  （3）作用域插槽
+
+16.vuex
+         由于状态零散地分布在许多组件和组件之间的交互中，大型应用复杂度也经常逐渐增长，为了解决这个问题，Vue提供 vuex。
+         应用级的状态集中放在store中； 改变状态的方式是提交mutations，这是个同步的事物； 异步逻辑应该封装在action中。通过
+   $store.state.xxx = xxx也可以改变变量的值，但是在严格模式下会报错，且调试时候无法跟踪状态的改变。       
+        state：存储状态，也就是变量；
+        getters：派生状态，也就是set、get中的get，有两个可选参数：state、getters分别可以获取state中的变量和其他
+                      的getters。外部调用方式：store.getters.personInfo()。就和vue的computed差不多；
+        mutations：提交状态修改。也就是set、get中的set，这是vuex中唯一修改state的方式，但不支持异步操作。第一个参数
+                           默认是state。外部调用方式：store.commit('SET_AGE', 18)。和vue中的methods类似。
+        actions：和mutations类似，不过actions支持异步操作。第一个参数默认是和store具有相同参数属性的对象。外部
+                      调用方式：store.dispatch('nameAsyn')。
+        modules：store的子模块，内容就相当于是store的一个实例。调用方式和前面介绍的相似，只是要加上当前子模块
+                        名，如：store.a.getters.xxx()。
+
+17.异步路由beforeEach
+    vue里面提供了三大类钩子，两种函数
+   （1）全局钩子
+   （2）某个路由的钩子
+   （3）组件内钩子
+   两种函数：
+   （1）Vue.beforeEach(function(to,form,next){}) /*在跳转之前执行*/
+   （2）Vue.afterEach(function(to,form))/*在跳转之后判断*/
+
+18.filter
+     过滤器可以用在两个地方：双花括号插值和v-bind表达式
+     过滤器定义方式又两种：在一个组件的选项中定义本地的过滤器 和 在Vue实例之前全局定义过滤器
+
+19.总结一下scoped三条渲染规则：
+ （1）给HTML的DOM节点加一个不重复data属性(形如：data-v-2311c06a)来表示他的唯一性
+ （2）在每句css选择器的末尾（编译后的生成的css语句）加一个当前组件的data属性选择器（如[data-v-2311c06a]）来私有化样式
+ （3）如果组件内部包含有其他组件，只会给其他组件的最外层标签加上当前组件的data属性
+
+20.logger日志插件
+    vue.js的开发插件应当有一个公开方法install，这个方法的第一个参数是vue构造器，第二个参数是一个可选的选项对象
+    MyLogger.install = function (Vue,options){ }
+
+21.v-if 和 v-show的区别
+    相同点：v-if与v-show都可以动态控制dom元素显示隐藏
+    不同点：v-if显示隐藏是将dom元素整个添加或删除，而v-show隐藏则是为该元素添加css--display:none，dom元素还在
+  （1）手段：v-if是动态的向DOM树内添加或者删除DOM元素；v-show是通过设置DOM元素的display样式属性控制显隐；
+  （2）编译过程：v-if切换有一个局部编译/卸载的过程，切换过程中合适地销毁和重建内部的事件监听和子组件；v-show只是简单的基于css切换；
+  （3）编译条件：v-if是惰性的，如果初始条件为假，则什么也不做；只有在条件第一次变为真时才开始局部编译（编译被缓存？编译被缓存后，
+          然后再切换的时候进行局部卸载); v-show是在任何条件下（首次条件是否为真）都被编译，然后被缓存，而且DOM元素保留；
+  （4）性能消耗：v-if有更高的切换消耗；v-show有更高的初始渲染消耗；
+  （5）使用场景：v-if适合运营条件不大可能改变；v-show适合频繁切换。
+
+22.vue.js的template编译的理解
+      在mount的过程中，如果render函数不存在，会将template进行compileToFunctions(带缓存的编译器)得到render以及staticRenderFns（function对象）
+      (1)在进入compileToFunctions以后，会先检查缓存中是否有已经编译好的结果，如果有结果则直接从缓存中读取。这样做防止每次同样的模板都要进行重复的编译工作。
+      (2)compile主要做了两件事，一件是合并option（前面说的将平台自有的option与传入的option进行合并），另一件是baseCompile，进行模板template的编译:
+           baseCompile：首先会将模板template进行parse得到一个AST语法树，再通过optimize做一些优化，最后通过generate得到render以及staticRenderFns。
+           parse：用正则等方式解析template模板中的指令、class、style等数据，形成AST语法树。
+           optimize：主要作用是标记static静态节点，这是Vue在编译过程中的一处优化，后面当update更新界面时，会有一个patch的过程，diff算法会直接跳过静态节点，从而减少
+                           了比较的过程，优化了patch的性能
+          generate：将AST语法树转化成render funtion字符串的过程，得到结果是render的字符串以及staticRenderFns字符串。
+          render：最后会返回一个VNode节点，在_update的时候，经过patch与之前的VNode节点进行比较，得出差异后将这些差异渲染到真实的DOM上。
+
+23. <keep-alive></keep-alive>的作用
+     包裹动态组件时，会缓存不活动的组件实例，主要用于保留组件状态或避免重新渲染；
+     vue 官网给出的一个方法是通过keep-alive将router-view包住就能实现组件不刷新显示原来的数据（组件前进刷新，后退不刷新，增加用户体验）
+    （2）取消缓存：$destroy完全销毁一个实例。清理它与其它实例的连接，解绑它的全部指令及事件监听器，这样就可以重新更新数据了
+
+24.vue和微信小程序的区别
+   （1）生命周期方面：vue的钩子函数在跳转新页面时，钩子函数都会触发；
+                                 微信小程序的钩子函数，页面不同的跳转方式，触发的钩子并不一样；
+            在页面加载请求数据时，两者钩子的使用有些类似，vue一般会在created或者Monted中请求数据，而小程序会在onload或者onShow中请求数据。
+   （2）数据绑定方面、列表渲染方面、显示与隐藏元素方面、事件处理方面语法不同；
+   （3）双向数据绑定：vue中有v-model；
+                                 小程序中没有双向数据绑定，当表单元素很多时候，更改值就变成了体力活（----缺点----）；
+   （4）绑定事件传参：Vue中可以直接在触发事件中传递参数；
+                                 小程序中不能直接在绑定事件中的方法中传入参数，需要将参数作为属性值，绑定到元素到data-属性上，然后在方法中，通过
+                                  e.currentTarget.dataset.*的方式获取，从而完成参数的传递（----缺点----）；
+   （5）父子组件通信：两者定义子组件、引入子组件方式、父子页面传值差不多
+
+25.Vue按需加载
+      resolve => require([URL], resolve)
+     （1）路由懒加载
+            routes:[{
+                  path: '/my',     
+                  component: resolve => require(['../page/my/my.vue'], resolve),   //懒加载
+               }]
+     （2）组件懒加载
+             components: {
+                   historyTab:resolve => {
+                          require(['../../component/historyTab/historyTab.vue'],resolve)
+                    },   
+              }
+      （3）针对webpack.js 做配置的更改
+              output中设置生成chunk文件的格式
+
+26.vue中操作数组
+        操作数组中的元素，不要使用下标，要使用数组的变异方法和引用方法和set方法，防止数组改变时页面没有变化。Vue.set( target, key, value )，
+    使用这个方法还可以将响应属性添加到嵌套的对象上。
+
+27.nextTick
+    （1）nextTick是在下次DOM更新循环结束之后执行延迟回调，在修改数据之后使用nextTick,则可以在回调中获取更新后的DOM
+    （2）在vue生命周期的created()钩子函数进行DOM操作一定要放在vue.nextTick()的回调函数中
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
