@@ -1,2 +1,4 @@
 1.是不是三端有三个js bundle?
 2.image的src不能是本地路径吗？
+3.不支持相对单位(em,rem)
+4.border不支持border:1px solid #ccc的组合写法，border-style,border-width,border-color
